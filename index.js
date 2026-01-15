@@ -37,15 +37,37 @@ async function run() {
     const applicationsCollection = client.db('Career_Code').collection('applications');
 
     app.get('/jobs', async(req, res) =>{
-        const result = await jobsCollection.find().toArray();
+        const email = req.query.email;
+        const query = {};
+        if(email){
+            query.hr_email = email;
+        }
+
+
+
+        const result = await jobsCollection.find(query).toArray();
         res.send(result);
     })
+
+    // app.get('/jobsByEmailAddress', async(req, res){
+    //     const email = req.query.email;
+    //     const query = {hr_email:email}
+    // })
     app.get('/jobs/:id', async(req, res) =>{
         const id = req.params.id;
         const query = {_id: new ObjectId(id)}
         const job = await jobsCollection.findOne(query);
         res.send(job);
     })
+
+    app.post('/jobs', async(req, res) =>{
+        const job = req.body;
+        const result = await jobsCollection.insertOne(job);
+        res.send(result);
+    })
+
+
+
     app.get('/applications' ,async(req, res) =>{
         const email = req.query.email;
         const query = {applicant : email};
@@ -59,9 +81,13 @@ async function run() {
             application.title = job.title;
             application.company_logo = job.company_logo;
         }
+        res.send(result);
+    })
 
-
-
+    app.get('/applications/job/:job_id', async(req, res) =>{
+        const job_id = req.params.job_id;
+        const query = {jobId: job_id};
+        const result = await applicationsCollection.find(query).toArray();
         res.send(result);
     })
 
@@ -71,6 +97,20 @@ async function run() {
         // console.log(application);
         const result = await applicationsCollection.insertOne(application);
         res.send(result);
+    })
+
+    app.patch('/applications/:id', async(req, res) =>{
+        const id = req.params.id;
+        // const updated = req.body;
+        const filter = {_id: new ObjectId(id)}
+        const updatedDoc = {
+            $set:{
+                status: req.body.status
+            }
+        }
+        const result = await applicationsCollection.updateOne(filter,updatedDoc);
+        res.send(result);
+
     })
 
 
